@@ -6,10 +6,9 @@ YTAudio is a high-performance, self-hosted YouTube-to-MP3 converter web applicat
 
 ---
 
-## ✨ Features
-
-- **Glassmorphic Dark UI**: A premium visual interface featuring a violet-pink palette, smooth animations, and step-by-step conversion progress.
-- **Metadata Preview Card**: Automatically parses YouTube video/shorts URLs and displays metadata (high-res thumbnail, title, channel name, duration, views) prior to downloading.
+- **Parallel Multi-Task Queueing**: Submit multiple video or playlist URLs concurrently. The input field clears immediately so you can queue another URL while active processes run in parallel.
+- **Glassmorphic Dark UI**: A premium visual interface featuring a violet-pink palette, smooth animations, and independent step-by-step conversion progress trackers for each download task.
+- **Metadata Preview Card**: Automatically parses YouTube URLs, retrieving video/shorts details (high-res thumbnail, title, channel name, duration) and listing playlist tracks.
 - **Variable Bitrate Presets**: Select from multiple audio encoding presets:
   - **Best**: 320 kbps VBR (Variable Bit Rate)
   - **High**: 256 kbps

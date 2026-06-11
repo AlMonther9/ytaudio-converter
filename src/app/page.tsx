@@ -5,11 +5,14 @@ import { useState, useEffect } from 'react';
 interface VideoInfo {
   id: string;
   title: string;
-  duration: number;
+  duration?: number;
   uploader: string;
   thumbnail: string;
-  viewCount: number;
-  description: string;
+  viewCount?: number;
+  description?: string;
+  isPlaylist?: boolean;
+  videoCount?: number;
+  videos?: Array<{ id: string; title: string; duration: number }>;
 }
 
 type DownloadState = 'idle' | 'fetching_info' | 'ready' | 'downloading' | 'completed' | 'error';
@@ -24,12 +27,19 @@ export default function Home() {
   const [savedPath, setSavedPath] = useState('');
 
   // Steps shown in the downloader progress panel
-  const steps = [
-    { title: 'Initializing Engine', desc: 'Starting yt-dlp & FFmpeg instance' },
-    { title: 'Fetching Audio Stream', desc: 'Extracting audio channels from YouTube' },
-    { title: 'Converting to MP3', desc: 'Muxing & encoding high-fidelity audio' },
-    { title: 'Transmitting File', desc: 'Delivering final MP3 to your device' }
-  ];
+  const steps = videoInfo?.isPlaylist
+    ? [
+        { title: 'Initializing Playlist Engine', desc: 'Connecting to YouTube playlist' },
+        { title: 'Downloading Audio Tracks', desc: `Downloading all ${videoInfo.videoCount} tracks` },
+        { title: 'Converting Tracks to MP3', desc: 'Encoding tracks to high-fidelity audio' },
+        { title: 'Finalizing Files', desc: 'Saving all converted MP3s to your target directory' }
+      ]
+    : [
+        { title: 'Initializing Engine', desc: 'Starting yt-dlp & FFmpeg instance' },
+        { title: 'Fetching Audio Stream', desc: 'Extracting audio channels from YouTube' },
+        { title: 'Converting to MP3', desc: 'Muxing & encoding high-fidelity audio' },
+        { title: 'Transmitting File', desc: 'Saving final MP3 to your device' }
+      ];
 
   // Simulating/estimating backend download progress steps for better UX
   useEffect(() => {
@@ -39,16 +49,16 @@ export default function Home() {
       
       const runSteps = () => {
         timer = setTimeout(() => {
-          setActiveStep(1); // Fetching audio stream
+          setActiveStep(1); // Fetching / Downloading
           
           timer = setTimeout(() => {
-            setActiveStep(2); // Converting to MP3
+            setActiveStep(2); // Converting
             
             timer = setTimeout(() => {
-              setActiveStep(3); // Transmitting file
-            }, 12000);
-          }, 8000);
-        }, 3000);
+              setActiveStep(3); // Transmitting / Finalizing
+            }, videoInfo?.isPlaylist ? 35000 : 12000);
+          }, videoInfo?.isPlaylist ? 25000 : 8000);
+        }, videoInfo?.isPlaylist ? 5000 : 3000);
       };
       
       runSteps();
@@ -62,7 +72,7 @@ export default function Home() {
   }, [downloadState]);
 
   // Format seconds to MM:SS or HH:MM:SS
-  const formatDuration = (seconds: number) => {
+  const formatDuration = (seconds?: number) => {
     if (!seconds) return '0:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -75,7 +85,7 @@ export default function Home() {
   };
 
   // Format view count nicely
-  const formatViews = (views: number) => {
+  const formatViews = (views?: number) => {
     if (!views) return '0 views';
     if (views >= 1000000) {
       return `${(views / 1000000).toFixed(1)}M views`;
@@ -228,17 +238,19 @@ export default function Home() {
 
         {/* Video Preview & Options */}
         {downloadState === 'ready' && videoInfo && (
-          <div className="preview-container">
-            <div className="preview-thumbnail-wrapper">
+          <div className="preview-container" style={{ flexDirection: videoInfo.isPlaylist ? 'column' : undefined }}>
+            <div className="preview-thumbnail-wrapper" style={{ width: videoInfo.isPlaylist ? '100%' : undefined, maxWidth: videoInfo.isPlaylist ? '480px' : undefined, height: videoInfo.isPlaylist ? 'auto' : undefined, aspectRatio: videoInfo.isPlaylist ? '16/9' : undefined }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={videoInfo.thumbnail}
                 alt={videoInfo.title}
                 className="preview-thumbnail"
               />
-              <span className="preview-duration">{formatDuration(videoInfo.duration)}</span>
+              <span className="preview-duration">
+                {videoInfo.isPlaylist ? `${videoInfo.videoCount} Videos` : formatDuration(videoInfo.duration)}
+              </span>
             </div>
-            <div className="preview-info">
+            <div className="preview-info" style={{ width: '100%', maxWidth: videoInfo.isPlaylist ? '600px' : undefined }}>
               <div>
                 <h2 className="preview-title" title={videoInfo.title}>
                   {videoInfo.title}
@@ -250,16 +262,37 @@ export default function Home() {
                   {videoInfo.uploader}
                 </div>
                 <div className="preview-views">
-                  {formatViews(videoInfo.viewCount)}
+                  {videoInfo.isPlaylist ? 'Playlist' : formatViews(videoInfo.viewCount)}
                 </div>
               </div>
+
+              {videoInfo.isPlaylist && videoInfo.videos && (
+                <div className="playlist-tracks-preview">
+                  <span className="playlist-tracks-header">Tracks Included ({videoInfo.videoCount}):</span>
+                  <div className="playlist-tracks-list">
+                    {videoInfo.videos.slice(0, 10).map((track, i) => (
+                      <div key={track.id} className="playlist-track-item">
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '80%' }}>
+                          {i + 1}. {track.title}
+                        </span>
+                        <span style={{ opacity: 0.6 }}>{formatDuration(track.duration)}</span>
+                      </div>
+                    ))}
+                    {videoInfo.videoCount && videoInfo.videoCount > 10 && (
+                      <div className="playlist-track-more">
+                        + {videoInfo.videoCount - 10} more tracks...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="action-section">
                 <button className="download-btn" onClick={handleDownload}>
                   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Convert & Download MP3
+                  {videoInfo.isPlaylist ? 'Convert & Download Playlist' : 'Convert & Download MP3'}
                 </button>
               </div>
             </div>
@@ -321,7 +354,11 @@ export default function Home() {
             </div>
             <div>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>Conversion Complete!</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Your high-quality MP3 has been saved directly on your PC.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                {videoInfo.isPlaylist 
+                  ? 'Your high-quality MP3 playlist has been saved directly on your PC.' 
+                  : 'Your high-quality MP3 has been saved directly on your PC.'}
+              </p>
             </div>
             
             <div style={{ 
@@ -337,7 +374,9 @@ export default function Home() {
               <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>{videoInfo.title}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>Uploader: {videoInfo.uploader}</div>
               <div style={{ borderTop: '1px solid rgba(150, 120, 220, 0.08)', paddingTop: '0.75rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-dark)', display: 'block', textTransform: 'uppercase', marginBottom: '0.25rem', fontWeight: 600 }}>Saved Destination</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dark)', display: 'block', textTransform: 'uppercase', marginBottom: '0.25rem', fontWeight: 600 }}>
+                  {videoInfo.isPlaylist ? 'Saved Destination Folder' : 'Saved Destination'}
+                </span>
                 <code style={{ fontSize: '0.8rem', color: 'var(--accent)', wordBreak: 'break-all' }}>{savedPath}</code>
               </div>
             </div>
@@ -347,7 +386,7 @@ export default function Home() {
               onClick={resetApp}
               style={{ marginTop: '1rem', padding: '1rem 2.5rem' }}
             >
-              Convert Another Video
+              {videoInfo.isPlaylist ? 'Convert Another Playlist' : 'Convert Another Video'}
             </button>
           </div>
         )}

@@ -22,6 +22,14 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [quality, setQuality] = useState('0'); // 0 = best, 2 = high, 5 = medium, 7 = low
   const [tasks, setTasks] = useState<DownloadTask[]>([]);
+  const [isVercel, setIsVercel] = useState(false);
+
+  // Check if deployed on Vercel
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+      setIsVercel(true);
+    }
+  }, []);
 
   // Load tasks from localStorage on initial render for user convenience
   useEffect(() => {
@@ -131,6 +139,27 @@ export default function Home() {
             Paste links below to download and convert multiple audios in parallel directly to your PC.
           </p>
         </header>
+
+        {/* Vercel Host Warning Banner */}
+        {isVercel && (
+          <div className="glass-card warning-banner" style={{ 
+            marginBottom: '1.5rem', 
+            padding: '1rem 1.25rem', 
+            borderColor: 'rgba(245, 158, 11, 0.2)',
+            background: 'rgba(245, 158, 11, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            animation: 'fadeInUp 0.6s ease-out'
+          }}>
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div style={{ fontSize: '0.85rem', color: '#f59e0b', textAlign: 'left', lineHeight: '1.4' }}>
+              <strong>Vercel Live Demo Notice:</strong> Downloader functionality is currently disabled on this Vercel deployment (serverless limits). We are moving to a VPS host soon! To use it today, please clone the project and run it locally.
+            </div>
+          </div>
+        )}
 
         {/* Input Card */}
         <div className="glass-card main-card">

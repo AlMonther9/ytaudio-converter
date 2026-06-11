@@ -572,6 +572,40 @@ body {
     height: auto;
     aspect-ratio: 16/9;
   }
+  
+  /* Task Card Responsive Styling */
+  .task-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .task-thumbnail-container {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+  }
+
+  .task-details {
+    width: 100%;
+  }
+
+  .task-title {
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .task-actions {
+    align-self: flex-end;
+    width: 100%;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
 }
 
 /* Playlist Tracks Preview */
